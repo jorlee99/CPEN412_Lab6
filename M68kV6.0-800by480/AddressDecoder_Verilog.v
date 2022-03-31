@@ -47,6 +47,8 @@ module AddressDecoder_Verilog (
 		
 		if(Address[31:26] == 6'b0000_10) 						// address hex 0800_0000 - 0BFF_FFFF
 			DramSelect_H <= 1'b1;
+		if((Address[31:0] >= 32'h00500000) && (Address[31:0] <= 32'h0050FFFF))
+			CanBusSelect_H <= 1;
 		
 		end
 endmodule
