@@ -29,7 +29,7 @@ Begin
             if((Address(31 downto 0) >= x"00500000") and (Address(31 downto 0) <= x"005001FF"))then
 					CAN_Enable0_H <= '1';
 					
-				elsif((Address(31 downto 0) = x"00500200") and (Address(31 downto 0) <= x"005003FF"))then
+				elsif((Address(31 downto 0) >= x"00500200") and (Address(31 downto 0) <= x"005003FF"))then
 					CAN_Enable1_H <= '1';
 					 
 				end if;

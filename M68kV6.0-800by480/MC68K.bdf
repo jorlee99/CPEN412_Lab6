@@ -5193,14 +5193,6 @@ refer to the applicable agreement for further details.
 	(bus)
 )
 (connector
-	(pt 1448 2240)
-	(pt 1448 2496)
-)
-(connector
-	(pt 1448 2496)
-	(pt 1448 2864)
-)
-(connector
 	(pt 1432 2192)
 	(pt 1432 2512)
 )
@@ -5515,6 +5507,14 @@ refer to the applicable agreement for further details.
 (connector
 	(pt 1904 -64)
 	(pt 1904 424)
+)
+(connector
+	(pt 1448 2240)
+	(pt 1448 2496)
+)
+(connector
+	(pt 1448 2496)
+	(pt 1448 2864)
 )
 (junction (pt 1280 224))
 (junction (pt 1376 224))
