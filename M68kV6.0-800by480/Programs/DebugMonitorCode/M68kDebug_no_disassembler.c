@@ -1,4 +1,5 @@
 #include "DebugMonitor.h"
+#include "CanBus.h"
 // #include "math.h"
 
 //defintions used
@@ -77,6 +78,8 @@
 #define I2C_setIACK         0x09       // (0b00001001) // nothing but clear IACK
 
 #define I2C_MasterAck       0x01       // (0b00000001)
+#define I2C_MasterNOAck     0x00       // (0b00000000)
+#define I2C_SlaveReadAck    0x21       // (0b00100001) // read bit set
 
 #define I2CReadStop 0x41
 
@@ -93,9 +96,11 @@
 #define ADC_SLAVE_ADDRESS_MWRITE 0x92
 #define ADC_SLAVE_ADDRESS_MREAD 0x93
 #define ADC_ANALOG_OUT_CTRL_BYTE 0x40
-#define ADC_ANALOG_READ_CTRL_BYTE 0x05
+#define ADC_ANALOG_READ_CTRL_BYTE 0x44 // changed that
 
 #define PI_VAL 3
+
+
 
 /********************************************************************
 
@@ -124,6 +129,8 @@ unsigned int WatchPointSetOrCleared[8] ;
 char WatchPointString[8][100] ;
 
 char    TempString[100] ;
+
+
 //added by Warren
 char datatypeselection(void);            // allows the user to choose the length of data (byte, word, long word)
 char testdataselection(void);            // allows the user to choose the data pattern
@@ -755,7 +762,7 @@ void SPI_Init(void)
     SPI_Ext = (unsigned char) 0x00;//00____00
     SPI_Status = (unsigned char) 0xC0;//1100_0000
     Disable_SPI_CS();
-
+    printf("\r\nFinished Init of SPI\r\n");
 
 }
 /************************************************************************************
@@ -816,7 +823,7 @@ void I2C_Init(void) {
     I2C_CORE_PRESCALE_LO = (unsigned char) 0x31;
 
     I2C_CORE_COMMAND = I2C_SlaveStart;
-    return;
+    printf("\r\nFinished Init of I2C\r\n");
 }
 
 void I2C_wait_transmit_finish(void)
@@ -850,7 +857,6 @@ void I2C_wait_transmit_finish(void)
             break;
         }
     }
-    return;
 }
 
 void I2C_check_slave_acknowledge(void)
@@ -872,8 +878,7 @@ void I2C_check_slave_acknowledge(void)
     // 10000000
     //if a = 1
     // 10000000
-    
-    return;    
+
 }
 
 //****************************************************************
@@ -892,8 +897,13 @@ void I2C_EEPROM_RandomRead(void) // no parameters passed, no value returned
 
     //printf("\r\nPrior to read, data in receive is %x\n",read_byte);
 
-    printf("\r\nEnter HEX EEPROM internal address to read from (betweeen 00000 and 01F3FF)\n\r"); // to print the received byte.
+    printf("\r\nENTER READ ADDR (00000 - 01F3FF):\n\r"); // to print the received byte.
     user_internal_address_complete = Get6HexDigits(0);
+
+    if(user_internal_address_complete > 0x1f3ff){
+        printf("\r\nInvalid address, default address used: 000000\n\r");
+        user_internal_address_complete = 0;
+    }
 
     // parse the address into bytes that can be sent to the EEPROM
     // check that the address is within the first block or the second block
@@ -942,7 +952,7 @@ void I2C_EEPROM_RandomRead(void) // no parameters passed, no value returned
     I2C_check_slave_acknowledge();
     // I2C_CORE_COMMAND =  I2C_SlaveStart;
     // I2C_CORE_COMMAND =  I2C_SlaveRead;
-    I2C_CORE_COMMAND = I2C_SlaveRead;
+    I2C_CORE_COMMAND = I2C_SlaveRead; // maybe have to include stop in this line directly 
     I2C_wait_transmit_finish();
     //I2C_CORE_COMMAND = I2C_SlaveReadStartStop;
 
@@ -956,7 +966,6 @@ void I2C_EEPROM_RandomRead(void) // no parameters passed, no value returned
 
     printf("Byte read at address hex %x%x is %x\n",internal_address_hi, internal_address_lo ,read_byte);
     printf("Random Read operation complete\n");
-    return;
     
 }
 
@@ -971,9 +980,13 @@ void I2C_EEPROM_RandomWrite(void) // no parameters passed, no value returned
     unsigned char internal_address_hi;
     unsigned char internal_address_lo;
 
-    
-    printf("\r\nEnter HEX EEPROM internal byte address to write to (betweeen 00000 and 01F3FF)\n\r");
+    printf("\r\nENTER WRITE ADDR (00000 - 01F3FF):\n\r"); // to print the received byte.
     user_internal_address_complete = Get6HexDigits(0);
+
+    if(user_internal_address_complete > 0x1f3ff){
+        printf("\r\nInvalid address, default address used: 000000\n\r");
+        user_internal_address_complete = 0;
+    }
 
     if(user_internal_address_complete > 0xF9FF){
         // we want to access the higher block (set block bit to 1)
@@ -1023,7 +1036,7 @@ void I2C_EEPROM_RandomWrite(void) // no parameters passed, no value returned
     I2C_wait_transmit_finish();
     I2C_check_slave_acknowledge();
 
-    printf("Random Write operation complete, check result with random read\n"); 
+    printf("\r\nRandom Write operation complete, check result with random read\n"); 
 }
 
 
@@ -1034,7 +1047,7 @@ void I2C_EEPROM_BLOCKREAD(void){
     unsigned char control_byte;
     unsigned char read_byte;
     unsigned int user_internal_address_complete;
-    unsigned int user_block_size;                   // this would hold up to 1F400
+    unsigned int user_block_size;                   // this would be up to 1F400
     unsigned char internal_address_hi;
     unsigned char internal_address_lo;
     unsigned int next_address_tracker;                   // keeps track of the internal address so that we can know when to switch the blocks
@@ -1042,16 +1055,27 @@ void I2C_EEPROM_BLOCKREAD(void){
     unsigned int bytes_counter;                     // keeps track of when the 128 bytes have been written over so the current read can be ended and a new one started
     unsigned int change_block_flag;                 // flag used to know when to send out the new control and address
 
-    printf("\r\nBLOCK READ START ADDR (000000-01F3FF):\n\r");
+    unsigned int block_flag; // flag used to know what block we are in to print the correct address. This is 1 for high block, 0 for low block.
+    unsigned int address_to_print_complete;
+    unsigned char address_to_print_hi;
+    unsigned char address_to_print_lo;
+    
+
+    printf("\r\nBLOCK READ START ADDR (000000 - 01F3FF):\n\r");
     user_internal_address_complete = Get6HexDigits(0);
+
+    if(user_internal_address_complete > 0x1f3ff){
+        printf("\r\nInvalid address, default address used: 000000\n\r");
+        user_internal_address_complete = 0;
+    }
 
     printf("\r\nBLOCK SIZE (betweeen 000001 and 01F400):\n\r");
     user_block_size = Get6HexDigits(0);
 
     if (user_block_size > I2C_EEPROM_BLOCK_SIZE_LIMIT || user_block_size ==0)
     {
-        printf("\r\nSize entered invalid, size set to HEX 01F400)\n\r");
-        user_block_size = I2C_EEPROM_BLOCK_SIZE_LIMIT;
+        printf("\r\nSize entered invalid, size set to 0000ff)\n\r");
+        user_block_size = 0xff;
     }
 
     if(user_internal_address_complete > 0xF9FF){
@@ -1060,12 +1084,14 @@ void I2C_EEPROM_BLOCKREAD(void){
         internal_address_hi = user_internal_address_complete >> 8;
         internal_address_lo = user_internal_address_complete;
         control_byte = I2C_EEPROM_CTRLBYTE_HI_BLOCK_WRITE; // write ebecause we need to write the address first
+        block_flag = 1;
     }
     else{
         // we want to acess the lower block (set block bit to 0) 
         internal_address_hi = user_internal_address_complete >> 8;
         internal_address_lo = user_internal_address_complete;
         control_byte = I2C_EEPROM_CTRLBYTE_LO_BLOCK_WRITE; // write because we need to write the address first
+        block_flag = 0;
     }
 
     // check that device is ready
@@ -1092,11 +1118,26 @@ void I2C_EEPROM_BLOCKREAD(void){
     I2C_wait_transmit_finish();
     I2C_check_slave_acknowledge();
 
+    next_address_tracker = internal_address_lo | (internal_address_hi << 8); // next_address_tracker now contains the starting hex address within the block
+    next_address_tracker++;   
+
     // from here we can start looping
 
     for (total_bytes_tracker = 1; total_bytes_tracker < user_block_size; total_bytes_tracker++){ // this runs from 1 to 127
         
         change_block_flag = 0; // resets the flag used 
+
+        if (block_flag){
+            address_to_print_complete = next_address_tracker - 1 +  0xFA00;
+
+        }
+        else {
+            address_to_print_complete = next_address_tracker - 1;
+        }
+
+        address_to_print_hi = address_to_print_complete >> 8;
+        address_to_print_lo = address_to_print_complete;
+        
         //printf("\r\nnext_address_tracker = %x\n", next_address_tracker); // remove later, just for debug purposes
         if(next_address_tracker > 0xF9FF){// if we are exceeding the block size, we should switch blocks
             // we need to change blocks next time
@@ -1108,18 +1149,17 @@ void I2C_EEPROM_BLOCKREAD(void){
             I2C_CORE_COMMAND = I2C_SlaveStop; // instead of sending a stop command
             
             change_block_flag = 1;
-            printf("\r\nData: %x\r\n" ,read_byte);
+            printf("\r\nADDR: %x%x, DATA: %x\r\n",address_to_print_hi, address_to_print_lo,read_byte);
         }        
         else {    
-            I2C_CORE_COMMAND = I2C_SlaveRead;
+            I2C_CORE_COMMAND = I2C_SlaveReadAck;
             I2C_wait_transmit_finish();
-
             // poll status to know when we can read from receive register
             while(I2C_CORE_STATUS & 0x01 == 0x00);// will stay here unless the core status bit 0 is set to 1
 
             read_byte = I2C_CORE_RECEIVE;
-            I2C_CORE_COMMAND = I2C_MasterAck; // instead of sending a stop command
-            printf("\r\nData: %x\r\n" ,read_byte);
+            
+            printf("\r\nADDR: %x%x, DATA: %x\r\n",address_to_print_hi, address_to_print_lo,read_byte);
         }
 
         if(change_block_flag == 1){// if we are exceeding the block size, we should switch blocks
@@ -1155,7 +1195,9 @@ void I2C_EEPROM_BLOCKREAD(void){
             I2C_check_slave_acknowledge();
 
             //reset the address tracker
-            next_address_tracker = 0x01;
+            next_address_tracker = 0x00;
+
+            block_flag = !block_flag;
 
             // //reset the flag
             // change_block_flag = 0;
@@ -1165,15 +1207,25 @@ void I2C_EEPROM_BLOCKREAD(void){
         //bytes_counter++; // counts the number of bytes sent (up to 128)
     }
 
+    
+    if (block_flag){
+        address_to_print_complete = next_address_tracker - 1 +  0xFA00;
+    }
+    else {
+        address_to_print_complete = next_address_tracker - 1;
+    }
+
+    address_to_print_hi = address_to_print_complete >> 8;
+    address_to_print_lo = address_to_print_complete;
+
     I2C_CORE_COMMAND = I2C_SlaveRead;
     I2C_wait_transmit_finish();
     // poll status to know when we can read from receive register
     while(I2C_CORE_STATUS & 0x01 == 0x00);// will stay here unless the core status bit 0 is set to 1
     read_byte = I2C_CORE_RECEIVE;
     I2C_CORE_COMMAND = I2C_SlaveStop;// this also rests the flag above
-    printf("\r\nLast Data: %x\r\n" ,read_byte);
-    printf("Block Read operation complete\n");
-    return;
+    printf("\r\nADDR: %x%x, DATA: %x\r\n",address_to_print_hi, address_to_print_lo,read_byte);
+    printf("\r\nBlock Read operation complete\r\n");
 }
 
 //****************************************************************
@@ -1192,16 +1244,21 @@ void I2C_EEPROM_BLOCKWRITE(void){
     unsigned int change_block_flag;                 // flag used to know when to send out the new control and address
 
     
-    printf("\r\nEnter HEX EEPROM internal start address to write BLOCK to (betweeen 000000 and 01F3FF)\n\r");
+    printf("\r\nENTER BLOCK WRITE ADDR (000000 - 01F3FF)\n\r");
     user_internal_address_complete = Get6HexDigits(0);
 
-    printf("\r\nEnter HEX Block SIZE (betweeen 000001 and 01F400)\n\r");
+    if(user_internal_address_complete > 0x1f3ff){
+        printf("\r\nInvalid address, default address used: 000000\n\r");
+        user_internal_address_complete = 0;
+    }
+
+    printf("\r\nENTER BLOCK SIZE (000001 - 01F400)\n\r");
     user_block_size = Get6HexDigits(0);
 
     if (user_block_size > I2C_EEPROM_BLOCK_SIZE_LIMIT || user_block_size ==0)
     {
-        printf("\r\nSize entered invalid, size set to HEX 01F400)\n\r");
-        user_block_size = I2C_EEPROM_BLOCK_SIZE_LIMIT;
+        printf("\r\nSize entered invalid, size set to HEX ff)\n\r");
+        user_block_size = 0xff;
     }
 
     if(user_internal_address_complete > 0xF9FF){
@@ -1218,7 +1275,7 @@ void I2C_EEPROM_BLOCKWRITE(void){
         control_byte = I2C_EEPROM_CTRLBYTE_LO_BLOCK_WRITE; // write because we need to write the address first
     }
 
-    printf("\r\nHi address byte: %x\nlo address byte: %x\n", internal_address_hi, internal_address_lo); // remove later, just for debug purposes
+    //printf("\r\nHi address byte: %x\nlo address byte: %x\n", internal_address_hi, internal_address_lo); // remove later, just for debug purposes
 
     // give an initial value to be written:
     printf("\r\nEnter HEX byte data to write\n\r");
@@ -1345,7 +1402,6 @@ void I2C_EEPROM_BLOCKWRITE(void){
     I2C_check_slave_acknowledge();
 
     printf("\r\nLast byte write complete. Check results\n\r");
-    return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1356,7 +1412,7 @@ void PCF8591_Gen(void){
     int timer = 0;
     int i = 1;
     int ledValue = 0;
-    int counter = 0;
+    int counter = 1;
     printf("\r\nGenerating a signal input an amplitude DAC (00-FF in HEX)\r\n");
 
     // printf("%.6f",0.001023);
@@ -1364,7 +1420,7 @@ void PCF8591_Gen(void){
 
     I2C_wait_transmit_finish();
 
-    printf("Amplitude input is: %d\r\n", amplitude);
+    printf("\r\nAmplitude input is: %d\r\n", amplitude);
 
     I2C_CORE_TRANSMIT = ADC_SLAVE_ADDRESS_MWRITE; //write initial address
     I2C_CORE_COMMAND = I2C_SlaveWriteStart;
@@ -1434,15 +1490,13 @@ void PCF8591_Read(void){
     int i =0;
     I2C_wait_transmit_finish();
 
-    printf("Reading byte ADC\r\n");
+    printf("\r\nReading ADC channels\r\n");
 
     I2C_CORE_TRANSMIT = ADC_SLAVE_ADDRESS_MWRITE; //write initial address
     I2C_CORE_COMMAND = I2C_SlaveWriteStart;
 
     I2C_wait_transmit_finish();
     I2C_check_slave_acknowledge();
-
-    printf("Sent slave address \r\n");
 
     I2C_CORE_TRANSMIT = ADC_ANALOG_READ_CTRL_BYTE;
     I2C_CORE_COMMAND = I2C_SlaveWrite;
@@ -1457,93 +1511,36 @@ void PCF8591_Read(void){
     I2C_check_slave_acknowledge();
 
     for (i =0; i<4;i++){
-        printf("Sending byte \r\n");
 
-        I2C_CORE_COMMAND = 0x28;
-        
+        if (i == 3){
+            I2C_CORE_COMMAND = I2C_SlaveRead;
+        }
+        else{
+            I2C_CORE_COMMAND = I2C_SlaveReadAck;
+        }        
         I2C_wait_transmit_finish();
 
         while(I2C_CORE_STATUS & 0x01 == 0x00);// will stay here unless the core status bit 0 is set to 1
-        printf("Got byte'\r\n");
+        //printf("Getting byte \r\n");
         read_byte = I2C_CORE_RECEIVE;
-        printf("Byte read is: %d\r\n", read_byte);
+        if(i == 1){
+            printf("\r\nThermistor read is: %d\r\n", read_byte);
+        }
+        else if(i == 2){
+            printf("\r\nPotentiometer read is: %d\r\n", read_byte);
+        }
+        else if (i==3){
+            printf("\r\nPhotoresistor read is: %d\r\n", read_byte);
+        }
+        // else 
+        //     printf("Garbage value is: %d\r\n",read_byte);
     }
-    I2C_CORE_COMMAND = I2CReadStop;
+    I2C_CORE_COMMAND = I2C_SlaveStop;
     I2C_wait_transmit_finish();
 
 
 }
 
-long int cos_taylor_running_yterms(long int x, int y)
-{
-    char sign = ' ';
-    long int result = 0;
-    long int inter = 0;
-    long int num = 0;
-    long int i = 0;
-    long int div = 0;
-    long int comp = 0;
-    long int den = 0;
-
-    div = (long int)(x / PI_VAL);
-    x = x - (div * PI_VAL);
-    printf("x is %d\r\n",x);
-    printf("div is %d\r\n",div);
-    sign = 1;
-    if (div % 2 != 0)
-        sign = -1;
-
-    result = 1;
-    inter = 1;
-    num = x * x;
-    for (i = 1; i <= y; i++)
-    {
-        comp = 2 * i;
-        den = comp * (comp - 1);
-        inter *= num / den;
-        if (i % 2 == 0)
-            result += inter;
-        else
-            result -= inter;
-    }
-
-    return (long int)((sign * result));
-}
-
-long int fpsin(long int i)
-{
-    /* Convert (signed) input to a value between 0 and 8192. (8192 is pi/2, which is the region of the curve fit). */
-    /* ------------------------------------------------------------------- */
-    int c = 0;
-    long long int y = 0;
-    unsigned long long A1 = 3370945099;
-    unsigned long long B1 = 2746362156;
-    unsigned long long C1 = 292421;
-    enum {n=13, p=32, q=31, r=3, a=12};
-    i <<= 1;
-    c = i<0; //set carry for output pos/neg
-
-    if(i == (i|0x4000)) // flip input value to corresponding value in range [0..8192)
-        i = (1<<15) - i;
-    i = (i & 0x7FFF) >> 1;
-    /* ------------------------------------------------------------------- */
-
-    /* The following section implements the formula:
-     = y * 2^-n * ( A1 - 2^(q-p)* y * 2^-n * y * 2^-n * [B1 - 2^-r * y * 2^-n * C1 * y]) * 2^(a-q)
-    Where the constants are defined as follows:
-    */
-    
-
-    y = (C1*((long long int)i))>>n;
-    y = B1 - (((long long int)i*y)>>r);
-    y = (long long int)i * (y>>n);
-    y = (long long int)i * (y>>n);
-    y = A1 - (y>>(p-q));
-    y = (long long int)i * (y>>n);
-    y = (y+(1UL<<(q-a-1)))>>(q-a); // Rounding
-
-    return c ? -y : y;
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // IMPORTANT
@@ -2148,6 +2145,8 @@ void Help(void)
     printf("\r\n  IW           - I2C EEPROM random write");
     printf("\r\n  I1           - I2C EEPROM BLOCK write");
     printf("\r\n  I2           - I2C EEPROM BLOCK write");
+    printf("\r\n  IG           - I2C EEPROM ADC GENERATOR");
+    printf("\r\n  IC           - I2C EEPROM ADC READ");
     printf(banner) ;
 }
 
@@ -2550,9 +2549,6 @@ void automatictests(){
 
     populatememory(selectedPattern, userdatatype);
     checkmemory(selectedPattern, userdatatype);
-
-    return;
-
 }
 // the type of pointer matters when trying to read or write to memory
 // char pointers for bytes
@@ -2590,8 +2586,6 @@ void manualtests(){
 
     memorywrite(pattern, startAddress, endAddress, datalength);
     memoryread(startAddress, endAddress, datalength);
-
-    return;
 }
 
 void memorywrite(int pattern, int startAddress, int endAddress, char datalength){
@@ -2750,10 +2744,11 @@ void MemoryTest(void)
 
 void main(void)
 {
+
     char c ;
     int i, j ;
 
-    char *BugMessage = "DE1-68k Bug V1.77";
+    char *BugMessage = "DE1-68k Bug V1.77 - Lab 5 Completed";
     char *CopyrightMessage = "Warren Chan 96150818 Jordan Lee 98807845";
 
     KillAllBreakPoints() ;
@@ -2818,6 +2813,9 @@ void main(void)
 
     // writes to the control register and sets the prescaling for the SCL frequency
     I2C_Init(); // need to check that this is the right location for iniatilzing the I2C core
+    // CanBusTest();
+    Init_CanBus_Controller0();
+    Init_CanBus_Controller1();
 
     while(((char)(PortB & 0x02)) == (char)(0x02))    {
         LoadFromFlashChip();

@@ -1307,7 +1307,7 @@ refer to the applicable agreement for further details.
 	)
 )
 (symbol
-	(rect 1784 1416 1848 1560)
+	(rect 1856 1416 1920 1560)
 	(text "AND8" (rect 1 0 25 10)(font "Arial" (font_size 6)))
 	(text "inst10" (rect 3 133 32 145)(font "Arial" ))
 	(port
@@ -3363,6 +3363,21 @@ refer to the applicable agreement for further details.
 		(rectangle (rect 16 16 240 176))
 	)
 )
+(symbol
+	(rect 1816 1480 1848 1496)
+	(text "VCC" (rect 7 0 27 10)(font "Arial" (font_size 6)))
+	(text "inst23" (rect 3 5 31 22)(font "Intel Clear" )(invisible))
+	(port
+		(pt 16 16)
+		(output)
+		(text "1" (rect 19 7 24 19)(font "Courier New" (bold))(invisible))
+		(text "1" (rect 19 7 24 19)(font "Courier New" (bold))(invisible))
+		(line (pt 16 16)(pt 16 8))
+	)
+	(drawing
+		(line (pt 8 8)(pt 24 8))
+	)
+)
 (connector
 	(pt 592 240)
 	(pt 1248 240)
@@ -3598,10 +3613,6 @@ refer to the applicable agreement for further details.
 	(pt -544 320)
 )
 (connector
-	(pt 1848 1632)
-	(pt -544 1632)
-)
-(connector
 	(pt -544 320)
 	(pt -544 1632)
 )
@@ -3610,16 +3621,8 @@ refer to the applicable agreement for further details.
 	(pt -640 336)
 )
 (connector
-	(pt -464 272)
-	(pt -496 272)
-)
-(connector
 	(pt -496 248)
 	(pt -496 256)
-)
-(connector
-	(pt -496 256)
-	(pt -496 272)
 )
 (connector
 	(pt 776 1176)
@@ -3746,40 +3749,8 @@ refer to the applicable agreement for further details.
 	(pt 2056 1352)
 )
 (connector
-	(pt 1848 1632)
-	(pt 1848 1488)
-)
-(connector
-	(pt 1776 1432)
-	(pt 1784 1432)
-)
-(connector
-	(pt 1776 1448)
-	(pt 1784 1448)
-)
-(connector
-	(pt 1776 1464)
-	(pt 1784 1464)
-)
-(connector
-	(pt 1776 1480)
-	(pt 1784 1480)
-)
-(connector
-	(pt 1776 1496)
-	(pt 1784 1496)
-)
-(connector
-	(pt 1776 1512)
-	(pt 1784 1512)
-)
-(connector
-	(pt 1776 1528)
-	(pt 1784 1528)
-)
-(connector
-	(pt 1776 1544)
-	(pt 1784 1544)
+	(pt 1920 1632)
+	(pt 1920 1488)
 )
 (connector
 	(pt -272 1304)
@@ -5516,6 +5487,62 @@ refer to the applicable agreement for further details.
 	(pt 1448 2496)
 	(pt 1448 2864)
 )
+(connector
+	(pt 1920 1632)
+	(pt -544 1632)
+)
+(connector
+	(pt 1776 1544)
+	(pt 1856 1544)
+)
+(connector
+	(pt 1856 1528)
+	(pt 1776 1528)
+)
+(connector
+	(pt 1856 1512)
+	(pt 1776 1512)
+)
+(connector
+	(pt 1856 1464)
+	(pt 1776 1464)
+)
+(connector
+	(pt 1776 1448)
+	(pt 1856 1448)
+)
+(connector
+	(pt 1776 1432)
+	(pt 1856 1432)
+)
+(connector
+	(pt -496 272)
+	(pt -464 272)
+)
+(connector
+	(pt -496 272)
+	(pt -496 1592)
+)
+(connector
+	(pt -496 1592)
+	(pt 1824 1592)
+)
+(connector
+	(pt 1776 1480)
+	(pt 1856 1480)
+)
+(connector
+	(pt 1776 1496)
+	(pt 1824 1496)
+)
+(connector
+	(pt 1824 1496)
+	(pt 1824 1592)
+)
+(connector
+	(pt 1856 1496)
+	(pt 1832 1496)
+)
 (junction (pt 1280 224))
 (junction (pt 1376 224))
 (junction (pt 1296 240))
@@ -5546,7 +5573,6 @@ refer to the applicable agreement for further details.
 (junction (pt 528 24))
 (junction (pt 576 -24))
 (junction (pt 608 -56))
-(junction (pt -496 256))
 (junction (pt 792 224))
 (junction (pt 1360 624))
 (junction (pt 2064 328))

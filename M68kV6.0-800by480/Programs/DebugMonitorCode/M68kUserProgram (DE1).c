@@ -65,6 +65,10 @@
 #define Timer4Control   *(volatile unsigned char *)(0x0040003E)
 #define Timer4Status    *(volatile unsigned char *)(0x0040003E)
 
+#define Timer5Data      *(volatile unsigned char *)(0x00400130)
+#define Timer5Control   *(volatile unsigned char *)(0x00400132)
+#define Timer5Status    *(volatile unsigned char *)(0x00400132)
+
 /*********************************************************************************************
 **	RS232 port addresses
 *********************************************************************************************/
@@ -97,7 +101,7 @@
 *********************************************************************************************************************************/
 
 unsigned int i, x, y, z, PortA_Count;
-unsigned char Timer1Count, Timer2Count, Timer3Count, Timer4Count ;
+unsigned char Timer1Count, Timer2Count, Timer3Count, Timer4Count, Timer5Count ;
 
 /*******************************************************************************************
 ** Function Prototypes
@@ -141,6 +145,16 @@ void Timer_ISR()
    	    Timer4Control = 3;      	// reset the timer to clear the interrupt, enable interrupts and allow counter to run
         HEX_B = Timer4Count++ ;     // increment a HEX count on HEX_B with each tick of Timer 4
    	}
+}
+
+
+void TimerInterrupt(void){
+    if(Timer5Status == 1) {         // Did Timer 4 produce the Interrupt?
+        printf("Timer Interrupt\r\n");  
+        Timer5Control = 3;      	// reset the timer to clear the interrupt, enable interrupts and allow counter to run
+        HEX_B = Timer5Count++ ;     // increment a HEX count on HEX_B with each tick of Timer 4
+   	}
+
 }
 
 /*****************************************************************************************
@@ -333,23 +347,26 @@ void main()
 	int PassFailFlag = 1 ;
 
     i = x = y = z = PortA_Count =0;
-    Timer1Count = Timer2Count = Timer3Count = Timer4Count = 0;
+    Timer1Count = Timer2Count = Timer3Count = Timer4Count = Timer5Count = 0;
 
     InstallExceptionHandler(PIA_ISR, 25) ;          // install interrupt handler for PIAs 1 and 2 on level 1 IRQ
     InstallExceptionHandler(ACIA_ISR, 26) ;		    // install interrupt handler for ACIA on level 2 IRQ
     InstallExceptionHandler(Timer_ISR, 27) ;		// install interrupt handler for Timers 1-4 on level 3 IRQ
     InstallExceptionHandler(Key2PressISR, 28) ;	    // install interrupt handler for Key Press 2 on DE1 board for level 4 IRQ
     InstallExceptionHandler(Key1PressISR, 29) ;	    // install interrupt handler for Key Press 1 on DE1 board for level 5 IRQ
+    InstallExceptionHandler(TimerInterrupt,30);
 
     Timer1Data = 0x10;		// program time delay into timers 1-4
     Timer2Data = 0x20;
     Timer3Data = 0x15;
     Timer4Data = 0x25;
+    Timer5Data = 0x25;
 
     Timer1Control = 3;		// write 3 to control register to Bit0 = 1 (enable interrupt from timers) 1 - 4 and allow them to count Bit 1 = 1
     Timer2Control = 3;
     Timer3Control = 3;
     Timer4Control = 3;
+    Timer5Control = 3;
 
     Init_LCD();             // initialise the LCD display to use a parallel data interface and 2 lines of display
     Init_RS232() ;          // initialise the RS232 port for use with hyper terminal
