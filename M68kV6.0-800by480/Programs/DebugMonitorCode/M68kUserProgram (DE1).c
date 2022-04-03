@@ -119,7 +119,7 @@ void LCDClearln(void);
 void LCDline1Message(char *theMessage);
 void LCDline2Message(char *theMessage);
 int sprintf(char *out, const char *format, ...) ;
-void SwitchTest(void);
+unsigned char SwitchTest(void);
 /*****************************************************************************************
 **	Interrupt service routine for Timers
 **
@@ -129,20 +129,13 @@ void SwitchTest(void);
 *****************************************************************************************/
 
 // to get the state of the switches
-void SwitchTest(void)
+unsigned char SwitchTest(void)
 {
     int i, switches = 0 ;
 
-	printf("\r\n") ;
-
-        switches = (PortB << 8) | (PortA) ;
-        printf("\rSwitches SW[7-0] = ") ;
-        for( i = (int)(0x00000080); i > 0; i = i >> 1)  {
-            if((switches & i) == 0)
-                printf("0") ;
-            else
-                printf("1") ;
-    }
+    switches = (PortB << 8) | (PortA) ;
+        
+    return switches;
 }
 
 void Timer_ISR()
@@ -170,24 +163,33 @@ void Timer_ISR()
 
 
 void TimerInterrupt(void){
+    int dataArray[4];
+    int switchflag = 0;
+    int potflag = 0;
+    int lightflag = 0;
+    int thermflag = 0;
     if(Timer5Status == 1) {         // Did Timer 5 produce the Interrupt?
         Timer5Control = 3;      	// reset the timer to clear the interrupt, enable interrupts and allow counter to run
         HEX_D = Timer5Count++ ;     // increment a HEX count on HEX_B with each tick of Timer 5
-        SwitchTest();
-        
+        dataArray[0] = SwitchTest();
+        switchflag = 1;
         if(Timer5Count % 2 == 0){ // every 200 ms
-            PCF8591_Read(2);
-            // printf("hi\r\n");
+            dataArray[1] = PCF8591_Read(2);
+            potflag = 1;
+            // printf("\r\n");
         }
         if(Timer5Count % 5 == 0){ // every 500 ms
-            PCF8591_Read(3);
+            dataArray[2] = PCF8591_Read(3);
+            lightflag = 1;
             // printf("hi2\r\n");
         }
         if(Timer5Count % 20 == 0 ){// every 2 seconds
-            PCF8591_Read(1);
+            dataArray[3] = PCF8591_Read(1);
+            thermflag = 1;
             // printf("hi3\r\n");
         }
-        // printf("EnteredINterrutp\r\n");
+        CanBus0_Transmit(dataArray);
+        CanBus1_Receive(switchflag,potflag,lightflag,thermflag);
 
    	}
 

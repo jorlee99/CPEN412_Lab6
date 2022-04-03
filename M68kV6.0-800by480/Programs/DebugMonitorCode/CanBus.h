@@ -287,8 +287,8 @@
 /* Prototypes for our tasks/threads*/
 void Init_CanBus_Controller0(void);
 void Init_CanBus_Controller1(void);
-void CanBus0_Transmit(void);
+void CanBus0_Transmit(unsigned char datarray[]);
 void CanBus1_Transmit(void);
 void CanBus0_Receive(void);
-void CanBus1_Receive(void);
+void CanBus1_Receive(int switchflag, int potflag, int lightflag, int thermflag);
 void CanBusTest(void);

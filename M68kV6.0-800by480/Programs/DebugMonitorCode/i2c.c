@@ -190,7 +190,7 @@ void PhotoRead(void){
 
 }
 
-void PCF8591_Read(unsigned char Timer5Count){
+unsigned char PCF8591_Read(unsigned char Timer5Count){
     unsigned char read_byte;
     int i =0;
     unsigned char dataArray[3];
@@ -241,13 +241,16 @@ void PCF8591_Read(unsigned char Timer5Count){
         }
     }
     if(Timer5Count == 1){
-        printf("\r\nThermistor read is: %d\r\n", dataArray[0]);
+        // printf("\r\nThermistor read is: %d\r\n", dataArray[0]);
+        return dataArray[0];
     }
     else if(Timer5Count == 2){
-        printf("\r\nPotentiometer read is: %d\r\n", dataArray[1]);
+        // printf("\r\nPotentiometer read is: %d\r\n", dataArray[1]);
+        return dataArray[1];
     }
     else if (Timer5Count==3){
-        printf("\r\nPhotoresistor read is: %d\r\n", dataArray[2]);
+        // printf("\r\nPhotoresistor read is: %d\r\n", dataArray[2]);
+        return dataArray[2];
     }
     I2C_CORE_COMMAND = I2C_SlaveStop;
     I2C_wait_transmit_finish();
