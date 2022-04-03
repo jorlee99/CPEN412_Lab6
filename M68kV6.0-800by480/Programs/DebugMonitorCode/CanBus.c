@@ -1,5 +1,6 @@
 #include "CanBus.h"
 // initialisation for Can controller 0
+
 void Init_CanBus_Controller0(void)
 {
     // TODO - put your Canbus initialisation code for CanController 0 here
@@ -74,42 +75,47 @@ void Init_CanBus_Controller1(void)
 }
 
 // Transmit for sending a message via Can controller 0
-void CanBus0_Transmit(unsigned char dataArray[])
+void CanBus0_Transmit(unsigned char byteToSend)
+// void CanBus0_Transmit(void)
 {
+    int i = 0;
     // TODO - put your Canbus transmit code for CanController 0 here
     // See section 4.2.2 in the application note for details (PELICAN MODE)
+    // for ( i = 0; i <4; i++)
+    // {
+    //     printf("Data value is %x\r\n",dataArray[i]);
+    // }
     do{
     }while((Can0_StatusReg & TBS_Bit) != TBS_Bit);
 
-    Can0_TxFrameInfo = 0x04; // # of bytes
+    Can0_TxFrameInfo = 0x01; // # of bytes
     Can0_TxBuffer1 = 0xA5;
     Can0_TxBuffer2 = 0x20;
 
-    Can0_TxBuffer3 = dataArray[0]; // Databits
-    Can0_TxBuffer4 = dataArray[1];
-    Can0_TxBuffer5 = dataArray[2];
-    Can0_TxBuffer6 = dataArray[3];
+    printf("Data sent %d\r\n",byteToSend);
 
+    Can0_TxBuffer3 = 0x41;
+    Can0_TxBuffer4 = (int)byteToSend;
     Can0_CommandReg = TR_Bit;
 }
 
 // Transmit for sending a message via Can controller 1
-void CanBus1_Transmit(void)
+void CanBus1_Transmit(unsigned char byteToSend)
 {
     // TODO - put your Canbus transmit code for CanController 1 here
     // See section 4.2.2 in the application note for details (PELICAN MODE)
     do{
     }while((Can1_StatusReg & TBS_Bit) != TBS_Bit);
 
-    Can1_TxFrameInfo = 0x04;// # of bytes
+    Can1_TxFrameInfo = 0x01;// # of bytes
 
     Can1_TxBuffer1 = 0xA5;
     Can1_TxBuffer2 = 0x20;
 
-    Can1_TxBuffer3 = 0x4A; // start trans
-    Can1_TxBuffer4 = 0x4F;
-    Can1_TxBuffer5 = 0x52;
-    Can1_TxBuffer6 = 0x44;
+    printf("Data sent %d\r\n",byteToSend);
+
+    Can1_TxBuffer3 = 0x41;
+    Can1_TxBuffer4 = byteToSend; // start trans
 
     Can1_CommandReg = TR_Bit;
 }
@@ -119,7 +125,7 @@ void CanBus0_Receive(void)
 {
     // TODO - put your Canbus receive code for CanController 0 here
     // See section 4.2.4 in the application note for details (PELICAN MODE)
-    unsigned char BitArray[6];
+    unsigned char BitArray[4];
 
     do{
     }while( (Can0_StatusReg & RBS_Bit) != RBS_Bit);
@@ -130,21 +136,58 @@ void CanBus0_Receive(void)
     //data bits
     BitArray[2] = Can0_RxBuffer3;
     BitArray[3] = Can0_RxBuffer4;
-    BitArray[4] = Can0_RxBuffer5;
-    BitArray[5] = Can0_RxBuffer6;
 
-    
-
-    Can1_CommandReg = Can0_CommandReg & RRB_Bit;
-    printf("Can0RV : %c %c %c %c %c %c %c %c\n", BitArray[2], BitArray[3], BitArray[4], BitArray[5], BitArray[6],BitArray[7],BitArray[8],BitArray[9]);
+    Can0_CommandReg = RRB_Bit;
+    printf("Can0RV : %d\n", BitArray[3]);
 }
 
 // Receive for reading a received message via Can controller 1
-void CanBus1_Receive(int switchflag, int potflag, int lightflag, int thermflag)
+// void CanBus1_Receive(int switchflag, int potflag, int lightflag, int thermflag)
+// void Canbus1_Receive(void)
+// {
+//     // TODO - put your Canbus receive code for CanController 1 here
+//     // See section 4.2.4 in the application note for details (PELICAN MODE)
+//     unsigned char BitArray[3];
+//     int i =0;
+
+//     do{
+//     }while( (Can1_StatusReg & RBS_Bit) != RBS_Bit);
+
+//     BitArray[0] = Can1_RxBuffer1 & 0xff;
+//     BitArray[1] = Can1_RxBuffer2 & 0xff;
+
+//     //data bits
+//     BitArray[2] = Can1_RxBuffer3;
+//     Can1_CommandReg = Can1_CommandReg & RRB_Bit;
+//     printf("Can0RV : %c\n", BitArray[2]);
+//     // printf("Can1RV : %c %c %c %c\n", BitArray[2], BitArray[3], BitArray[4], BitArray[5]);
+//     // if (switchflag){
+//     //     printf("\rSwitches SW[7-0] = ") ;
+//     //         for( i = (int)(0x00000080); i > 0; i = i >> 1)  {
+//     //             if((BitArray[2] & i) == 0)
+//     //                 printf("0") ;
+//     //             else
+//     //                 printf("1") ;
+//     //     }
+//     // }
+//     // if(potflag){
+//     //     printf("\r\nThermistor read is: %d\r\n", BitArray[3]);
+//     // }
+//     // if(lightflag){
+//     //     printf("\r\nPotentiometer read is: %d\r\n", BitArray[4]);
+//     // }
+//     // if(thermflag){
+//     //     printf("\r\nPhotoresistor read is: %d\r\n", BitArray[5]);
+//     // }
+    
+
+// }
+
+void CanBus1_Receive(void)
 {
-    // TODO - put your Canbus receive code for CanController 1 here
+    // TODO - put your Canbus receive code for CanController 0 here
     // See section 4.2.4 in the application note for details (PELICAN MODE)
-    unsigned char BitArray[6];
+    unsigned char BitArray[4];
     int i =0;
 
     do{
@@ -156,31 +199,8 @@ void CanBus1_Receive(int switchflag, int potflag, int lightflag, int thermflag)
     //data bits
     BitArray[2] = Can1_RxBuffer3;
     BitArray[3] = Can1_RxBuffer4;
-    BitArray[4] = Can1_RxBuffer5;
-    BitArray[5] = Can1_RxBuffer6;
-
-    Can1_CommandReg = Can1_CommandReg & RRB_Bit;
-    // printf("Can1RV : %c %c %c %c %c %c %c %c\n", BitArray[2], BitArray[3], BitArray[4], BitArray[5], BitArray[6],BitArray[7],BitArray[8],BitArray[9]);
-    if (switchflag){
-        printf("\rSwitches SW[7-0] = ") ;
-            for( i = (int)(0x00000080); i > 0; i = i >> 1)  {
-                if((BitArray[2] & i) == 0)
-                    printf("0") ;
-                else
-                    printf("1") ;
-        }
-    }
-    if(potflag){
-        printf("\r\nThermistor read is: %d\r\n", BitArray[3]);
-    }
-    if(lightflag){
-        printf("\r\nPotentiometer read is: %d\r\n", BitArray[4]);
-    }
-    if(thermflag){
-        printf("\r\nPhotoresistor read is: %d\r\n", BitArray[5]);
-    }
-    
-
+    Can1_CommandReg = RRB_Bit;
+    printf("Can1RV : %d\n", BitArray[3]);
 }
 
 
@@ -189,8 +209,6 @@ void CanBus1_Receive(int switchflag, int potflag, int lightflag, int thermflag)
 //     // initialise the two Can controllers
 //     int i = 0;
 //     // printf("Initializing canbus\r\n");
-//     Init_CanBus_Controller0();
-//     Init_CanBus_Controller1();
 
 //     printf("\r\n\r\n---- CANBUS Test ----\r\n") ;
 

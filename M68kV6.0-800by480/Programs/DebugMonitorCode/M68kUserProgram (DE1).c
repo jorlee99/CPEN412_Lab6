@@ -163,34 +163,9 @@ void Timer_ISR()
 
 
 void TimerInterrupt(void){
-    int dataArray[4];
-    int switchflag = 0;
-    int potflag = 0;
-    int lightflag = 0;
-    int thermflag = 0;
     if(Timer5Status == 1) {         // Did Timer 5 produce the Interrupt?
         Timer5Control = 3;      	// reset the timer to clear the interrupt, enable interrupts and allow counter to run
         HEX_D = Timer5Count++ ;     // increment a HEX count on HEX_B with each tick of Timer 5
-        dataArray[0] = SwitchTest();
-        switchflag = 1;
-        if(Timer5Count % 2 == 0){ // every 200 ms
-            dataArray[1] = PCF8591_Read(2);
-            potflag = 1;
-            // printf("\r\n");
-        }
-        if(Timer5Count % 5 == 0){ // every 500 ms
-            dataArray[2] = PCF8591_Read(3);
-            lightflag = 1;
-            // printf("hi2\r\n");
-        }
-        if(Timer5Count % 20 == 0 ){// every 2 seconds
-            dataArray[3] = PCF8591_Read(1);
-            thermflag = 1;
-            // printf("hi3\r\n");
-        }
-        CanBus0_Transmit(dataArray);
-        CanBus1_Receive(switchflag,potflag,lightflag,thermflag);
-
    	}
 
 }
@@ -381,8 +356,17 @@ void main()
 {
   unsigned int row, i=0, count=0, counter1=1;
     char c, text[150] ;
+    int holder=0;
+    int switchflag = 0;
+    int potflag = 0;
+    int lightflag = 0;
+    int thermflag = 0;
+    int CounterHolder = 0;
+    
 
 	int PassFailFlag = 1 ;
+
+    // CanBusTest();
 
     i = x = y = z = PortA_Count =0;
     Timer1Count = Timer2Count = Timer3Count = Timer4Count = Timer5Count = 0;
@@ -411,6 +395,57 @@ void main()
     I2C_Init() ;
     Init_CanBus_Controller0();
     Init_CanBus_Controller1();
+
+    while(1){
+        if (Timer5Count > CounterHolder){
+            // switchflag = 0;
+            // potflag = 0;
+            // lightflag = 0;
+            // thermflag = 0;
+            holder = SwitchTest();
+            printf("Switch data = %d\r\n", holder);
+            CanBus0_Transmit(holder);
+            CanBus1_Receive();
+            // printf("switch value is %d\r\n",dataArray[0]);
+            
+            // switchflag = 1;
+            if(Timer5Count % 2 == 0){ // every 200 ms
+                // dataArray[1] = PCF8591_Read(2);
+                // // printf("pot value is %d\r\n",dataArray[1]);
+                // potflag = 1;
+                holder = PCF8591_Read(2);
+                printf("Pot data = %d\r\n", holder);
+                CanBus1_Transmit(holder);
+                CanBus0_Receive();
+                // printf("\r\n");
+            }
+            if(Timer5Count % 5 == 0){ // every 500 ms
+                // dataArray[2] = PCF8591_Read(3);
+                // // printf("light value is %d\r\n",dataArray[2]);
+                // lightflag = 1;
+                // printf("hi2\r\n");
+                holder = PCF8591_Read(3);
+                printf("Light data = %d\r\n", holder);
+                CanBus0_Transmit(holder);
+                CanBus1_Receive();
+            }
+            if(Timer5Count % 20 == 0 ){// every 2 seconds
+                // dataArray[3] = PCF8591_Read(1);
+                // // printf("therm value is %d\r\n",dataArray[2]);
+                // thermflag = 1;
+                // // printf("hi3\r\n");
+                Timer5Count = 0;
+                holder = PCF8591_Read(1);
+                printf("Therm data = %d\r\n", holder);
+                CanBus1_Transmit(holder);
+                CanBus0_Receive();
+            }
+            CounterHolder = Timer5Count;
+            
+        }
+    }
+    // CanBus1_Receive();
+
 
 /*************************************************************************************************
 **  Test of scanf function
