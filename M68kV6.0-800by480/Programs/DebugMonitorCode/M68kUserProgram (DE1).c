@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include "i2c.h"
+#include "CanBus.h"
+
 
 
 //IMPORTANT
@@ -103,6 +106,7 @@
 unsigned int i, x, y, z, PortA_Count;
 unsigned char Timer1Count, Timer2Count, Timer3Count, Timer4Count, Timer5Count ;
 
+
 /*******************************************************************************************
 ** Function Prototypes
 *******************************************************************************************/
@@ -115,7 +119,7 @@ void LCDClearln(void);
 void LCDline1Message(char *theMessage);
 void LCDline2Message(char *theMessage);
 int sprintf(char *out, const char *format, ...) ;
-
+void SwitchTest(void);
 /*****************************************************************************************
 **	Interrupt service routine for Timers
 **
@@ -123,6 +127,23 @@ int sprintf(char *out, const char *format, ...) ;
 **  out which timer is producing the interrupt
 **
 *****************************************************************************************/
+
+// to get the state of the switches
+void SwitchTest(void)
+{
+    int i, switches = 0 ;
+
+	printf("\r\n") ;
+
+        switches = (PortB << 8) | (PortA) ;
+        printf("\rSwitches SW[7-0] = ") ;
+        for( i = (int)(0x00000080); i > 0; i = i >> 1)  {
+            if((switches & i) == 0)
+                printf("0") ;
+            else
+                printf("1") ;
+    }
+}
 
 void Timer_ISR()
 {
@@ -149,10 +170,25 @@ void Timer_ISR()
 
 
 void TimerInterrupt(void){
-    if(Timer5Status == 1) {         // Did Timer 4 produce the Interrupt?
-        printf("Timer Interrupt\r\n");  
+    if(Timer5Status == 1) {         // Did Timer 5 produce the Interrupt?
         Timer5Control = 3;      	// reset the timer to clear the interrupt, enable interrupts and allow counter to run
-        HEX_B = Timer5Count++ ;     // increment a HEX count on HEX_B with each tick of Timer 4
+        HEX_D = Timer5Count++ ;     // increment a HEX count on HEX_B with each tick of Timer 5
+        SwitchTest();
+        
+        if(Timer5Count % 2 == 0){ // every 200 ms
+            PCF8591_Read(2);
+            // printf("hi\r\n");
+        }
+        if(Timer5Count % 5 == 0){ // every 500 ms
+            PCF8591_Read(3);
+            // printf("hi2\r\n");
+        }
+        if(Timer5Count % 20 == 0 ){// every 2 seconds
+            PCF8591_Read(1);
+            // printf("hi3\r\n");
+        }
+        // printf("EnteredINterrutp\r\n");
+
    	}
 
 }
@@ -370,23 +406,27 @@ void main()
 
     Init_LCD();             // initialise the LCD display to use a parallel data interface and 2 lines of display
     Init_RS232() ;          // initialise the RS232 port for use with hyper terminal
+    I2C_Init() ;
+    Init_CanBus_Controller0();
+    Init_CanBus_Controller1();
 
 /*************************************************************************************************
 **  Test of scanf function
 *************************************************************************************************/
 
+
     scanflush() ;                       // flush any text that may have been typed ahead
-    printf("\r\nEnter Integer: ") ;
-    scanf("%d", &i) ;
-    printf("You entered %d", i) ;
+    // printf("\r\nEnter Integer: ") ;
+    // scanf("%d", &i) ;
+    // printf("You entered %d", i) ;
 
-    sprintf(text, "\r\nHello CPEN 412 TA we are Jordan Lee and Warren Chan") ;
-    LCDLine1Message(text) ;
+    // sprintf(text, "\r\nHello CPEN 412 TA we are Jordan Lee and Warren Chan") ;
+    // LCDLine1Message(text) ;
 
-    printf("\r\nThe LEDs should be Flashing Now") ;
-    printf("\r\nThe 7 HEX should be Displaying Now") ;
+    // printf("\r\nThe LEDs should be Flashing Now") ;
+    // printf("\r\nThe 7 HEX should be Displaying Now") ;
 
-      printf("\r\nThis is a new program loaded from Flash for lab 3");
+    // printf("\r\nThis is a new program loaded from Flash for lab 3");
 
     while(1)
         ;
