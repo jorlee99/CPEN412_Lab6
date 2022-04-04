@@ -74,10 +74,13 @@
 // }
 
 // // Transmit for sending a message via Can controller 0
-// void CanBus0_Transmit(void)
+// void CanBus0_Transmit(unsigned char byteToSend)
 // {
 //     // TODO - put your Canbus transmit code for CanController 0 here
 //     // See section 4.2.2 in the application note for details (PELICAN MODE)
+
+//     printf("\r\nByte to send : %x \n\r", byteToSend) ;
+
 //     do{
 //     }while((Can0_StatusReg & TBS_Bit) != TBS_Bit);
 
@@ -92,18 +95,21 @@
 //     Can0_TxBuffer7 = 0x45;
 //     Can0_TxBuffer8 = 0x4E;
 //     Can0_TxBuffer9 = 0x20;
-//     Can0_TxBuffer10 = 0x4C;
+//     Can0_TxBuffer10 = byteToSend;
 
 //     Can0_CommandReg = TR_Bit;
 // }
 
 // // Transmit for sending a message via Can controller 1
-// void CanBus1_Transmit(void)
+// void CanBus1_Transmit(unsigned char byteToSend)
 // {
 //     // TODO - put your Canbus transmit code for CanController 1 here
 //     // See section 4.2.2 in the application note for details (PELICAN MODE)
+//     printf("\r\nByte to send : %x \n\r", byteToSend) ;
 //     do{
 //     }while((Can1_StatusReg & TBS_Bit) != TBS_Bit);
+
+    
 
 //     Can1_TxFrameInfo = 0x08;// # of bytes
 
@@ -117,7 +123,7 @@
 //     Can1_TxBuffer7 = 0x41;
 //     Can1_TxBuffer8 = 0x4E;
 //     Can1_TxBuffer9 = 0x20;
-//     Can1_TxBuffer10 = 0x4C;
+//     Can1_TxBuffer10 = byteToSend;
 
 //     Can1_CommandReg = TR_Bit;
 // }
@@ -178,31 +184,84 @@
 // }
 
 
+// // void CanBusTest(void)
+// // {
+// //     // initialise the two Can controllers
+// //     // printf("Initializing canbus\r\n");
+// //     int i =0;
+// //     Init_CanBus_Controller0();
+// //     Init_CanBus_Controller1();
+
+// //     printf("\r\n\r\n---- CANBUS Test ----\r\n") ;
+
+// //     // simple application to alternately transmit and receive messages from each of two nodes
+
+// //     while(1)    {
+// //         for(i = 0; i <500000; i++);                    // write a routine to delay say 1/2 second so we don't flood the network with messages to0 quickly
+
+// //         CanBus0_Transmit() ;       // transmit a message via Controller 0
+// //         CanBus1_Receive() ;        // receive a message via Controller 1 (and display it)
+
+// //         printf("\r\n") ;
+
+// //         for(i = 0; i <500000; i++);                    // write a routine to delay say 1/2 second so we don't flood the network with messages to0 quickly
+
+// //         CanBus1_Transmit() ;        // transmit a message via Controller 1
+// //         CanBus0_Receive() ;         // receive a message via Controller 0 (and display it)
+// //         printf("\r\n") ;
+
+// //     }
+// // }
+
+
 // void CanBusTest(void)
 // {
 //     // initialise the two Can controllers
+//     int i = 0;
+//     unsigned char testbyte;
 //     // printf("Initializing canbus\r\n");
-//     int i =0;
-//     Init_CanBus_Controller0();
-//     Init_CanBus_Controller1();
 
-//     printf("\r\n\r\n---- CANBUS Test ----\r\n") ;
+//     printf("\r\n\r\n---- CANBUS Test Warren ----\r\n") ;
 
 //     // simple application to alternately transmit and receive messages from each of two nodes
 
+//     // while(1)    {
+//     //     for(i = 0; i <500000; i++);                    // write a routine to delay say 1/2 second so we don't flood the network with messages to0 quickly
+
+//     //     CanBus0_Transmit(0x2a) ;       // transmit a message via Controller 0
+//     //     CanBus1_Receive() ;        // receive a message via Controller 1 (and display it)
+
+//     //     printf("\r\n") ;
+
+//     //     for(i = 0; i <500000; i++);                    // write a routine to delay say 1/2 second so we don't flood the network with messages to0 quickly
+
+//     //     CanBus1_Transmit(0x2b) ;        // transmit a message via Controller 1
+//     //     CanBus0_Receive() ;         // receive a message via Controller 0 (and display it)
+//     //     printf("\r\n") ;
+
+//     // }
+    
+
+//     testbyte = 0x46; 
+    
 //     while(1)    {
 //         for(i = 0; i <500000; i++);                    // write a routine to delay say 1/2 second so we don't flood the network with messages to0 quickly
 
-//         CanBus0_Transmit() ;       // transmit a message via Controller 0
+//         printf("\r\nTest byte : %x \n\r", testbyte) ;
+
+//         CanBus0_Transmit(testbyte) ;       // transmit a message via Controller 0
 //         CanBus1_Receive() ;        // receive a message via Controller 1 (and display it)
 
 //         printf("\r\n") ;
 
 //         for(i = 0; i <500000; i++);                    // write a routine to delay say 1/2 second so we don't flood the network with messages to0 quickly
 
-//         CanBus1_Transmit() ;        // transmit a message via Controller 1
+//         CanBus1_Transmit(testbyte) ;        // transmit a message via Controller 1
 //         CanBus0_Receive() ;         // receive a message via Controller 0 (and display it)
 //         printf("\r\n") ;
 
+
 //     }
+
+//     // modifications to the canbustest show that writing a byte using a variable works at least from the debug monitor
 // }

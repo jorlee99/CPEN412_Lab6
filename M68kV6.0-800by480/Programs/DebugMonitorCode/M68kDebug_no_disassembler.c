@@ -1,5 +1,6 @@
 #include "DebugMonitor.h"
 #include "CanBus.h"
+#include "CanBus1.h"
 // #include "math.h"
 
 //defintions used
@@ -2813,9 +2814,10 @@ void main(void)
 
     // writes to the control register and sets the prescaling for the SCL frequency
     I2C_Init(); // need to check that this is the right location for iniatilzing the I2C core
-    // CanBusTest();
+    
     Init_CanBus_Controller0();
     Init_CanBus_Controller1();
+    CanBusTest();
 
     while(((char)(PortB & 0x02)) == (char)(0x02))    {
         LoadFromFlashChip();

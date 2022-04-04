@@ -1,6 +1,5 @@
 #include "CanBus.h"
 // initialisation for Can controller 0
-
 void Init_CanBus_Controller0(void)
 {
     // TODO - put your Canbus initialisation code for CanController 0 here
@@ -76,26 +75,28 @@ void Init_CanBus_Controller1(void)
 
 // Transmit for sending a message via Can controller 0
 void CanBus0_Transmit(unsigned char byteToSend)
-// void CanBus0_Transmit(void)
 {
-    int i = 0;
     // TODO - put your Canbus transmit code for CanController 0 here
     // See section 4.2.2 in the application note for details (PELICAN MODE)
-    // for ( i = 0; i <4; i++)
-    // {
-    //     printf("Data value is %x\r\n",dataArray[i]);
-    // }
+    
+
     do{
     }while((Can0_StatusReg & TBS_Bit) != TBS_Bit);
+    printf("\r\nByte to send : %x \n\r", byteToSend) ;
 
-    Can0_TxFrameInfo = 0x01; // # of bytes
+    Can0_TxFrameInfo = 0x08; // # of bytes
     Can0_TxBuffer1 = 0xA5;
     Can0_TxBuffer2 = 0x20;
 
-    printf("Data sent %d\r\n",byteToSend);
+    Can0_TxBuffer3 = byteToSend;//0x57; // Databits
+    // Can0_TxBuffer4 = 0x41;
+    // Can0_TxBuffer5 = 0x52;
+    // Can0_TxBuffer6 = 0x52;
+    // Can0_TxBuffer7 = 0x45;
+    // Can0_TxBuffer8 = 0x4E;
+    // Can0_TxBuffer9 = 0x20;
+    // Can0_TxBuffer10 = byteToSend;
 
-    Can0_TxBuffer3 = 0x41;
-    Can0_TxBuffer4 = (int)byteToSend;
     Can0_CommandReg = TR_Bit;
 }
 
@@ -104,18 +105,26 @@ void CanBus1_Transmit(unsigned char byteToSend)
 {
     // TODO - put your Canbus transmit code for CanController 1 here
     // See section 4.2.2 in the application note for details (PELICAN MODE)
+    
     do{
     }while((Can1_StatusReg & TBS_Bit) != TBS_Bit);
+    printf("\r\nByte to send : %x \n\r", byteToSend) ;
 
-    Can1_TxFrameInfo = 0x01;// # of bytes
+    
+
+    Can1_TxFrameInfo = 0x08;// # of bytes
 
     Can1_TxBuffer1 = 0xA5;
     Can1_TxBuffer2 = 0x20;
 
-    printf("Data sent %d\r\n",byteToSend);
-
-    Can1_TxBuffer3 = 0x41;
-    Can1_TxBuffer4 = byteToSend; // start trans
+    Can1_TxBuffer3 = byteToSend; // start trans
+    // Can1_TxBuffer4 = 0x4F;
+    // Can1_TxBuffer5 = 0x52;
+    // Can1_TxBuffer6 = 0x44;
+    // Can1_TxBuffer7 = 0x41;
+    // Can1_TxBuffer8 = 0x4E;
+    // Can1_TxBuffer9 = 0x20;
+    // Can1_TxBuffer10 = byteToSend;
 
     Can1_CommandReg = TR_Bit;
 }
@@ -125,7 +134,7 @@ void CanBus0_Receive(void)
 {
     // TODO - put your Canbus receive code for CanController 0 here
     // See section 4.2.4 in the application note for details (PELICAN MODE)
-    unsigned char BitArray[4];
+    unsigned char BitArray[7];
 
     do{
     }while( (Can0_StatusReg & RBS_Bit) != RBS_Bit);
@@ -136,59 +145,25 @@ void CanBus0_Receive(void)
     //data bits
     BitArray[2] = Can0_RxBuffer3;
     BitArray[3] = Can0_RxBuffer4;
+    BitArray[4] = Can0_RxBuffer5;
+    BitArray[5] = Can0_RxBuffer6;
+    BitArray[6] = Can0_RxBuffer7;
+    BitArray[7] = Can0_RxBuffer8;
+    BitArray[8] = Can0_RxBuffer9;
+    BitArray[9] = Can0_RxBuffer10;
+    
 
+    // Can1_CommandReg = Can0_CommandReg & RRB_Bit;
     Can0_CommandReg = RRB_Bit;
-    printf("Can0RV : %d\n", BitArray[3]);
+    printf("Can0RV : %c %c %c %c %c %c %c %c\n", BitArray[2], BitArray[3], BitArray[4], BitArray[5], BitArray[6],BitArray[7],BitArray[8],BitArray[9]);
 }
 
 // Receive for reading a received message via Can controller 1
-// void CanBus1_Receive(int switchflag, int potflag, int lightflag, int thermflag)
-// void Canbus1_Receive(void)
-// {
-//     // TODO - put your Canbus receive code for CanController 1 here
-//     // See section 4.2.4 in the application note for details (PELICAN MODE)
-//     unsigned char BitArray[3];
-//     int i =0;
-
-//     do{
-//     }while( (Can1_StatusReg & RBS_Bit) != RBS_Bit);
-
-//     BitArray[0] = Can1_RxBuffer1 & 0xff;
-//     BitArray[1] = Can1_RxBuffer2 & 0xff;
-
-//     //data bits
-//     BitArray[2] = Can1_RxBuffer3;
-//     Can1_CommandReg = Can1_CommandReg & RRB_Bit;
-//     printf("Can0RV : %c\n", BitArray[2]);
-//     // printf("Can1RV : %c %c %c %c\n", BitArray[2], BitArray[3], BitArray[4], BitArray[5]);
-//     // if (switchflag){
-//     //     printf("\rSwitches SW[7-0] = ") ;
-//     //         for( i = (int)(0x00000080); i > 0; i = i >> 1)  {
-//     //             if((BitArray[2] & i) == 0)
-//     //                 printf("0") ;
-//     //             else
-//     //                 printf("1") ;
-//     //     }
-//     // }
-//     // if(potflag){
-//     //     printf("\r\nThermistor read is: %d\r\n", BitArray[3]);
-//     // }
-//     // if(lightflag){
-//     //     printf("\r\nPotentiometer read is: %d\r\n", BitArray[4]);
-//     // }
-//     // if(thermflag){
-//     //     printf("\r\nPhotoresistor read is: %d\r\n", BitArray[5]);
-//     // }
-    
-
-// }
-
 void CanBus1_Receive(void)
 {
-    // TODO - put your Canbus receive code for CanController 0 here
+    // TODO - put your Canbus receive code for CanController 1 here
     // See section 4.2.4 in the application note for details (PELICAN MODE)
-    unsigned char BitArray[4];
-    int i =0;
+    unsigned char BitArray[7];
 
     do{
     }while( (Can1_StatusReg & RBS_Bit) != RBS_Bit);
@@ -199,16 +174,26 @@ void CanBus1_Receive(void)
     //data bits
     BitArray[2] = Can1_RxBuffer3;
     BitArray[3] = Can1_RxBuffer4;
+    BitArray[4] = Can1_RxBuffer5;
+    BitArray[5] = Can1_RxBuffer6;
+    BitArray[6] = Can1_RxBuffer7;
+    BitArray[7] = Can1_RxBuffer8;
+    BitArray[8] = Can1_RxBuffer9;
+    BitArray[9] = Can1_RxBuffer10;
+
+    // Can1_CommandReg = Can1_CommandReg & RRB_Bit;
     Can1_CommandReg = RRB_Bit;
-    printf("Can1RV : %d\n", BitArray[3]);
+    printf("Can1RV : %c %c %c %c %c %c %c %c\n", BitArray[2], BitArray[3], BitArray[4], BitArray[5], BitArray[6],BitArray[7],BitArray[8],BitArray[9]);
 }
 
 
 // void CanBusTest(void)
 // {
 //     // initialise the two Can controllers
-//     int i = 0;
 //     // printf("Initializing canbus\r\n");
+//     int i =0;
+//     Init_CanBus_Controller0();
+//     Init_CanBus_Controller1();
 
 //     printf("\r\n\r\n---- CANBUS Test ----\r\n") ;
 
@@ -230,3 +215,61 @@ void CanBus1_Receive(void)
 
 //     }
 // }
+
+
+void CanBusTest(void)
+{
+    // initialise the two Can controllers
+    int i = 0;
+    unsigned char testbyte;
+    // printf("Initializing canbus\r\n");
+
+    printf("\r\n\r\n---- CANBUS Test Warren ----\r\n") ;
+
+    // simple application to alternately transmit and receive messages from each of two nodes
+
+    // while(1)    {
+    //     for(i = 0; i <500000; i++);                    // write a routine to delay say 1/2 second so we don't flood the network with messages to0 quickly
+
+    //     CanBus0_Transmit(0x2a) ;       // transmit a message via Controller 0
+    //     CanBus1_Receive() ;        // receive a message via Controller 1 (and display it)
+
+    //     printf("\r\n") ;
+
+    //     for(i = 0; i <500000; i++);                    // write a routine to delay say 1/2 second so we don't flood the network with messages to0 quickly
+
+    //     CanBus1_Transmit(0x2b) ;        // transmit a message via Controller 1
+    //     CanBus0_Receive() ;         // receive a message via Controller 0 (and display it)
+    //     printf("\r\n") ;
+
+    // }
+    
+
+    testbyte = 0x46; 
+    
+    while(1)    {
+        for(i = 0; i <500000; i++);                    // write a routine to delay say 1/2 second so we don't flood the network with messages to0 quickly
+
+        printf("\r\nTest byte : %c \n\r", testbyte) ;
+
+        CanBus0_Transmit(testbyte) ;       // transmit a message via Controller 0
+        CanBus1_Receive() ;        // receive a message via Controller 1 (and display it)
+
+        printf("\r\n") ;
+
+        testbyte++;
+        printf("\r\nTest byte : %c \n\r", testbyte) ;
+
+        for(i = 0; i <500000; i++);                    // write a routine to delay say 1/2 second so we don't flood the network with messages to0 quickly
+
+        CanBus1_Transmit(testbyte) ;        // transmit a message via Controller 1
+        CanBus0_Receive() ;         // receive a message via Controller 0 (and display it)
+        printf("\r\n") ;
+
+        testbyte++;
+
+
+    }
+
+    // modifications to the canbustest show that writing a byte using a variable works at least from the debug monitor
+}
