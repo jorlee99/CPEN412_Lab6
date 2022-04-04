@@ -2148,6 +2148,7 @@ void Help(void)
     printf("\r\n  I2           - I2C EEPROM BLOCK write");
     printf("\r\n  IG           - I2C EEPROM ADC GENERATOR");
     printf("\r\n  IC           - I2C EEPROM ADC READ");
+    printf("\r\n  V            - CAN BUS Test");
     printf(banner) ;
 }
 
@@ -2288,6 +2289,9 @@ void menu(void)
             else
                 UnknownCommand() ;
         }
+
+        else if( c == (char)('V'))              // Watchpoint command
+            CanBusTest();
         
 
         else
@@ -2817,7 +2821,7 @@ void main(void)
     
     Init_CanBus_Controller0();
     Init_CanBus_Controller1();
-    CanBusTest();
+    //CanBusTest();
 
     while(((char)(PortB & 0x02)) == (char)(0x02))    {
         LoadFromFlashChip();

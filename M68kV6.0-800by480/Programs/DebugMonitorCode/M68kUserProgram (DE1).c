@@ -3,7 +3,6 @@
 #include <ctype.h>
 #include "i2c.h"
 #include "CanBus.h"
-#include "CanBus1.h"
 
 
 
@@ -368,6 +367,7 @@ void main()
 	int PassFailFlag = 1 ;
 
     unsigned char testbyte;
+    int index;
 
     // CanBusTest();
 
@@ -395,10 +395,22 @@ void main()
 
     Init_LCD();             // initialise the LCD display to use a parallel data interface and 2 lines of display
     Init_RS232() ;          // initialise the RS232 port for use with hyper terminal
-    // I2C_Init() ;
-    // Init_CanBus_Controller0();
-    // Init_CanBus_Controller1();
-    testbyte = 0x7a;
+    I2C_Init() ;
+    Init_CanBus_Controller0();
+    Init_CanBus_Controller1();
+    // testbyte = 0x7a;
+
+    //CanBusTest();
+
+    // while(1){
+    //     holder = SwitchTest();
+    //     printf("\n\rSwitch data = %x\r\n", holder);
+    //     for(index = 0; index <500000; index++);
+    //     CanBus0_Transmit(holder);
+    //     CanBus1_Receive();
+    //     printf("\n\r");
+    // }
+    
 
     while(1){
         if (Timer5Count > CounterHolder){
@@ -407,43 +419,43 @@ void main()
             // lightflag = 0;
             // thermflag = 0;
             holder = SwitchTest();
-            printf("\n\rSwitch data = %x\r\n", holder);
+            printf("\n\rSwitch data = %x\n", holder);
             CanBus0_Transmit(holder);
             CanBus1_Receive();
             // printf("switch value is %d\r\n",dataArray[0]);
             
-            // // switchflag = 1;
-            // if(Timer5Count % 2 == 0){ // every 200 ms
-            //     // dataArray[1] = PCF8591_Read(2);
-            //     // // printf("pot value is %d\r\n",dataArray[1]);
-            //     // potflag = 1;
-            //     holder = PCF8591_Read(2);
-            //     printf("Pot data = %x\r\n", holder);
-            //     CanBus1_Transmit(holder);
-            //     CanBus0_Receive();
-            //     // printf("\r\n");
-            // }
-            // if(Timer5Count % 5 == 0){ // every 500 ms
-            //     // dataArray[2] = PCF8591_Read(3);
-            //     // // printf("light value is %d\r\n",dataArray[2]);
-            //     // lightflag = 1;
-            //     // printf("hi2\r\n");
-            //     holder = PCF8591_Read(3);
-            //     printf("Light data = %x\r\n", holder);
-            //     CanBus0_Transmit(holder);
-            //     CanBus1_Receive();
-            // }
-            // if(Timer5Count % 20 == 0 ){// every 2 seconds
-            //     // dataArray[3] = PCF8591_Read(1);
-            //     // // printf("therm value is %d\r\n",dataArray[2]);
-            //     // thermflag = 1;
-            //     // // printf("hi3\r\n");
-            //     Timer5Count = 0;
-            //     holder = PCF8591_Read(1);
-            //     printf("Therm data = %x\r\n", holder);
-            //     CanBus1_Transmit(holder);
-            //     CanBus0_Receive();
-            // }
+            // switchflag = 1;
+            if(Timer5Count % 2 == 0){ // every 200 ms
+                // dataArray[1] = PCF8591_Read(2);
+                // // printf("pot value is %d\r\n",dataArray[1]);
+                // potflag = 1;
+                holder = PCF8591_Read(2);
+                printf("\n\rPot data = %x\n", holder);
+                CanBus1_Transmit(holder);
+                CanBus0_Receive();
+                // printf("\r\n");
+            }
+            if(Timer5Count % 5 == 0){ // every 500 ms
+                // dataArray[2] = PCF8591_Read(3);
+                // // printf("light value is %d\r\n",dataArray[2]);
+                // lightflag = 1;
+                // printf("hi2\r\n");
+                holder = PCF8591_Read(3);
+                printf("\n\rLight data = %x\n", holder);
+                CanBus0_Transmit(holder);
+                CanBus1_Receive();
+            }
+            if(Timer5Count % 20 == 0 ){// every 2 seconds
+                // dataArray[3] = PCF8591_Read(1);
+                // // printf("therm value is %d\r\n",dataArray[2]);
+                // thermflag = 1;
+                // // printf("hi3\r\n");
+                Timer5Count = 0;
+                holder = PCF8591_Read(1);
+                printf("\r\nTherm data = %x\n", holder);
+                CanBus1_Transmit(holder);
+                CanBus0_Receive();
+            }
             CounterHolder = Timer5Count;
             
         }
