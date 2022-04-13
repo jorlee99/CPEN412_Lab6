@@ -54,7 +54,7 @@
 void I2C_check_slave_acknowledge(void);
 void I2C_Init(void);
 void I2C_wait_transmit_finish(void);
-void PCF8591_Read(unsigned char);
+unsigned char PCF8591_Read(unsigned char Timer5Count);
 void PotRead(void);
 void PhotoRead(void);
 void ThermRead(void);

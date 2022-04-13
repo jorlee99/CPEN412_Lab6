@@ -1,5 +1,6 @@
 
 #include "i2c.h"
+#include "stdio.h"
 void I2C_Init(void) {
     // don't forget to initialize and enable the IIC controller
     // Set it up for no interrupts
@@ -190,7 +191,7 @@ void PhotoRead(void){
 
 }
 
-void PCF8591_Read(unsigned char Timer5Count){
+unsigned char PCF8591_Read(unsigned char Timer5Count){
     unsigned char read_byte;
     int i =0;
     unsigned char dataArray[3];
@@ -240,16 +241,23 @@ void PCF8591_Read(unsigned char Timer5Count){
             dataArray[2] = read_byte;
         }
     }
-    if(Timer5Count == 1){
-        printf("\r\nThermistor read is: %d\r\n", dataArray[0]);
-    }
-    else if(Timer5Count == 2){
-        printf("\r\nPotentiometer read is: %d\r\n", dataArray[1]);
-    }
-    else if (Timer5Count==3){
-        printf("\r\nPhotoresistor read is: %d\r\n", dataArray[2]);
-    }
+
     I2C_CORE_COMMAND = I2C_SlaveStop;
     I2C_wait_transmit_finish();
+
+    // if(Timer5Count == 1){
+    //     // printf("\r\nThermistor read is: %d\r\n", dataArray[0]);
+    //     return dataArray[0];
+    // }
+    if(Timer5Count == 2){
+        // printf("\r\nPotentiometer read is: %d\r\n", dataArray[1]);
+        return dataArray[1];
+    }
+    else if (Timer5Count==3){
+        // printf("\r\nPhotoresistor read is: %d\r\n", dataArray[2]);
+        return dataArray[2];
+    }
+    else
+        return dataArray[0];
 
 }
